@@ -2,6 +2,9 @@ using Terraria;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using System.Reflection;
+using Terraria.Chat;
+using Terraria.Localization;
+using Terraria.ID;
 
 namespace InfernumMasterPatch
 {
@@ -14,6 +17,18 @@ namespace InfernumMasterPatch
         private static bool _initialized, _wasEnabled, _firstCheckDone;
 
         public override void OnWorldLoad() => _firstCheckDone = false;
+
+        private void Announce(string text, Color color)
+        {
+            if (Main.netMode == NetmodeID.Server)
+            {
+                ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(text), color);
+            }
+            else if (Main.netMode == NetmodeID.SinglePlayer)
+            {
+                Main.NewText(text, color);
+            }
+        }
 
         public override void PostUpdateWorld()
         {
@@ -31,7 +46,7 @@ namespace InfernumMasterPatch
 
                 if (!_wasEnabled)
                 {
-                    Main.NewText("InfernumMasterPatch: Enabled.", Color.LimeGreen);
+                    Announce("InfernumMasterPatch: Enabled.", Color.LimeGreen);
                     _wasEnabled = true;
                     _firstCheckDone = true;
                 }
@@ -40,8 +55,8 @@ namespace InfernumMasterPatch
             {
                 if (_wasEnabled || !_firstCheckDone)
                 {
-                    Main.NewText("InfernumMasterPatch: Enable Death Mode to activate Infernum.", Color.Orange);
-                    if (_wasEnabled) Main.NewText("InfernumMasterPatch: Disabled.", Color.IndianRed);
+                    Announce("InfernumMasterPatch: Enable Death Mode to activate Infernum.", Color.Orange);
+                    if (_wasEnabled) Announce("InfernumMasterPatch: Disabled.", Color.IndianRed);
                     
                     _wasEnabled = false;
                     _firstCheckDone = true;
