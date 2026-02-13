@@ -1,78 +1,19 @@
-using Terraria;
+using CalamityMod.Systems;
 using Terraria.ModLoader;
-using Microsoft.Xna.Framework;
-using System.Reflection;
-using Terraria.Chat;
-using Terraria.Localization;
-using Terraria.ID;
 
 namespace InfernumMasterPatch
 {
-    public class InfernumMasterPatch : Mod { }
-
-    public class CompatibilitySystem : ModSystem
+    public class InfernumMasterPatch : Mod 
     {
-        private static PropertyInfo _disableModes;
-        private static FieldInfo _infActive, _deathActive;
-        private static bool _initialized, _wasEnabled, _firstCheckDone;
-
-        public override void OnWorldLoad() => _firstCheckDone = false;
-
-        private void Announce(string text, Color color)
+        public override void PostSetupContent()
         {
-            if (Main.netMode == NetmodeID.Server)
-            {
-                ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(text), color);
-            }
-            else if (Main.netMode == NetmodeID.SinglePlayer)
-            {
-                Main.NewText(text, color);
-            }
-        }
+            var difficulty = ModContent.GetInstance<MasterPatchDifficulty>();
 
-        public override void PostUpdateWorld()
-        {
-            if (Main.gameMenu) { _wasEnabled = false; return; }
-            if (!_initialized) Initialize();
-            bool isMaster = Main.masterMode || Main.getGoodWorld || Main.zenithWorld;
-            bool isDeath = _deathActive != null && (bool)_deathActive.GetValue(null);
-            bool isCompatible = isMaster && isDeath;
-
-            _disableModes?.SetValue(null, false);
-
-            if (isCompatible)
+            if (DifficultyModeSystem.Difficulties != null && !DifficultyModeSystem.Difficulties.Contains(difficulty))
             {
-                _infActive?.SetValue(null, true);
-
-                if (!_wasEnabled)
-                {
-                    Announce("InfernumMasterPatch: Enabled.", Color.LimeGreen);
-                    _wasEnabled = true;
-                    _firstCheckDone = true;
-                }
+                DifficultyModeSystem.Difficulties.Add(difficulty);
+                DifficultyModeSystem.CalculateDifficultyData();
             }
-            else
-            {
-                if (_wasEnabled || !_firstCheckDone)
-                {
-                    Announce("InfernumMasterPatch: Enable Death Mode to activate Infernum.", Color.Orange);
-                    if (_wasEnabled) Announce("InfernumMasterPatch: Disabled.", Color.IndianRed);
-                    
-                    _wasEnabled = false;
-                    _firstCheckDone = true;
-                }
-            }
-        }
-
-        private void Initialize()
-        {
-            if (ModLoader.TryGetMod("InfernumMode", out Mod inf))
-            {
-                _disableModes = inf.Code.GetType("InfernumMode.Core.GlobalInstances.Systems.DifficultyManagementSystem")?.GetProperty("DisableDifficultyModes");
-                _infActive = inf.Code.GetType("InfernumMode.Core.GlobalInstances.Systems.WorldSaveSystem")?.GetField("infernumModeEnabled", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-            }
-            _deathActive = ModLoader.GetMod("CalamityMod")?.Code.GetType("CalamityMod.World.CalamityWorld")?.GetField("death");
-            _initialized = true;
         }
     }
 }
