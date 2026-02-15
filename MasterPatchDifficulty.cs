@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System.Collections.Generic;
+using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.Localization;
@@ -19,13 +20,15 @@ namespace InfernumMasterPatch
 
         public override SoundStyle ActivationSound => new SoundStyle("InfernumMasterPatch/Assets/Sounds/ModeToggleLaughDeep");
 
-        public override float DifficultyScale => 0.25f;
+        public override float DifficultyScale => 1.0f;
         public override int BackBoneGameModeID => GameModeID.Master;
         public override Color ChatTextColor => Color.DarkRed; 
 
         public override LocalizedText Name => Language.GetText("Mods.InfernumMasterPatch.DifficultyUI.Name");
         public override LocalizedText ShortDescription => Language.GetText("Mods.InfernumMasterPatch.DifficultyUI.Desc");
         public override LocalizedText ExpandedDescription => Language.GetText("Mods.InfernumMasterPatch.DifficultyUI.Expanded");
+
+        public override FTWDisplayMode GetForTheWorthyDisplay => FTWDisplayMode.Always;
 
         public override bool Enabled
         {
@@ -40,6 +43,12 @@ namespace InfernumMasterPatch
         public override bool IsBasedOn(DifficultyMode mode)
         {
             if (mode is DeathDifficulty || mode is MasterDifficulty) return true;
+            
+            if (Main.getGoodWorld)
+            {
+                if (mode is LegendaryDifficulty || mode is MaliceDifficulty) return true;
+            }
+
             return base.IsBasedOn(mode);
         }
 
@@ -50,7 +59,12 @@ namespace InfernumMasterPatch
 
             for (int i = 0; i < difficultyArray.Length; i++)
             {
-                if (difficultyArray[i] is DeathDifficulty || difficultyArray[i] is MasterDifficulty)
+                DifficultyMode diff = difficultyArray[i];
+
+                if (diff is DeathDifficulty || diff is MasterDifficulty)
+                    list.Add(i);
+                
+                if (Main.getGoodWorld && (diff is LegendaryDifficulty || diff is MaliceDifficulty))
                     list.Add(i);
             }
 

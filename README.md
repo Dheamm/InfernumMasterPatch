@@ -1,6 +1,6 @@
 # Infernum Master Patch
 
-Infernum Master Patch is a compatibility patch that allows you to run **Infernum Mode** on **Master Mode** and **For the Worthy** seeds.
+Infernum Master Patch is a compatibility patch that allows you to run **Infernum Mode** on **Master Mode**, **For the Worthy** seeds, and **Legendary** difficulty.
 
 ## Overview
 
@@ -8,7 +8,7 @@ By default, Infernum is restricted to Expert Mode. This mod bypasses that limit 
 
 ## How to use
 
-Just as standard Infernum follows the hierarchy of **Expert + Revengeance + Infernum**, this patch establishes a new progression: **Master + Death + Infernum**.
+Just as standard Infernum follows the hierarchy of **Expert + Revengeance + Infernum**, this patch establishes a new progression: **Master + Death + Infernum** (which automatically scales to **Legendary + Malice + Infernum** on FTW seeds).
 
 1. Enter your world.
 2. Open the **Calamity Difficulty UI**.

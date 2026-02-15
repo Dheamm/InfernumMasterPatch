@@ -1,6 +1,6 @@
 displayName = Infernum Master Patch
 author = Dheam
-version = 1.1.0
+version = 1.1.1
 modReferences = CalamityMod, InfernumMode
 sortAfter = CalamityMod
 includeSource = true
