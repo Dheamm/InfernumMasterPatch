@@ -10,53 +10,117 @@ namespace InfernumMasterPatch
 {
     public class CompatibilitySystem : ModSystem
     {
-        public static bool IsActive { get; private set; }
-
         private static PropertyInfo _infernumDisableModes;
         private static FieldInfo _infernumActiveField;
-        private static FieldInfo _calamityDeathField;
+        private static FieldInfo _calamityRevengeField;
+        private static MethodInfo _sendPacketMethod;
+        private static System.Type _infernumActivityPacketType;
         private static bool _initialized;
+        private static bool _patchActive;
 
-        public static void TogglePatch(bool enable)
+        public static bool IsPatchActive
         {
-            IsActive = enable;
-            
-            if (enable)
+            get => _patchActive;
+            set => _patchActive = value;
+        }
+
+        public override void Load()
+        {
+            _initialized = false;
+            _patchActive = false;
+        }
+
+        public override void OnModLoad()
+        {
+            Initialize();
+        }
+
+        public override void PreUpdateWorld()
+        {
+            if (Main.gameMenu)
             {
-                Announce("Mods.InfernumMasterPatch.Messages.Enabled");
-                EnforceState(); 
+                _patchActive = false;
+                return;
             }
-            else
+
+            if (!_initialized)
+                Initialize();
+
+            if (_patchActive && _infernumDisableModes != null)
             {
-                Announce("Mods.InfernumMasterPatch.Messages.Disabled");
+                _infernumDisableModes.SetValue(null, false);
             }
         }
 
-        public override void PostUpdateWorld()
+        public static bool IsInfernumActive()
         {
-            if (Main.gameMenu) { IsActive = false; return; }
-            if (!_initialized) Initialize();
+            if (!_initialized || _infernumActiveField == null)
+                return false;
 
-            if (IsActive) EnforceState();
+            try
+            {
+                return (bool)_infernumActiveField.GetValue(null);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        private static void EnforceState()
+        public static void SetInfernumActive(bool active)
         {
-            if (!_initialized) return;
+            if (!_initialized || _infernumActiveField == null)
+                return;
 
-            if (Main.GameMode != GameModeID.Master)
-                Main.GameMode = GameModeID.Master;
-
-            _calamityDeathField?.SetValue(null, true);
-
-            _infernumDisableModes?.SetValue(null, false); 
-            _infernumActiveField?.SetValue(null, true);     
+            try
+            {
+                _infernumActiveField.SetValue(null, active);
+                
+                if (active)
+                    SendInfernumSyncPacket();
+            }
+            catch
+            {
+            }
         }
 
-        private static void Announce(string key)
+        private static void SendInfernumSyncPacket()
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            try
+            {
+                if (_sendPacketMethod != null && _infernumActivityPacketType != null)
+                {
+                    var genericMethod = _sendPacketMethod.MakeGenericMethod(_infernumActivityPacketType);
+                    genericMethod.Invoke(null, new object[] { null, -1, -1 });
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        public static void SetRevengeActive(bool active)
+        {
+            if (!_initialized || _calamityRevengeField == null)
+                return;
+
+            try
+            {
+                _calamityRevengeField.SetValue(null, active);
+            }
+            catch
+            {
+            }
+        }
+
+        public static void Announce(string key)
         {
             string text = Language.GetTextValue(key);
-            if (text == key) text = key.Contains("Enabled") ? "Infernum Master Patch: ENABLED" : "Infernum Master Patch: DISABLED";
+            if (text == key)
+                text = key.Contains("Enabled") ? "Infernum Master Patch: ENABLED" : "Infernum Master Patch: DISABLED";
 
             Color color = Color.White;
 
@@ -68,17 +132,37 @@ namespace InfernumMasterPatch
 
         private static void Initialize()
         {
+            if (_initialized)
+                return;
+
             if (ModLoader.TryGetMod("InfernumMode", out Mod inf))
             {
                 _infernumDisableModes = inf.Code.GetType("InfernumMode.Core.GlobalInstances.Systems.DifficultyManagementSystem")?.GetProperty("DisableDifficultyModes");
                 _infernumActiveField = inf.Code.GetType("InfernumMode.Core.GlobalInstances.Systems.WorldSaveSystem")?.GetField("infernumModeEnabled", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+                
+                var packetManagerType = inf.Code.GetType("InfernumMode.Core.Netcode.PacketManager");
+                _infernumActivityPacketType = inf.Code.GetType("InfernumMode.Core.Netcode.Packets.InfernumModeActivityPacket");
+                
+                if (packetManagerType != null)
+                {
+                    var methods = packetManagerType.GetMethods(BindingFlags.Static | BindingFlags.Public);
+                    foreach (var method in methods)
+                    {
+                        if (method.Name == "SendPacket" && method.IsGenericMethod)
+                        {
+                            _sendPacketMethod = method;
+                            break;
+                        }
+                    }
+                }
             }
-            
+
             if (ModLoader.TryGetMod("CalamityMod", out Mod cal))
             {
-                _calamityDeathField = cal.Code.GetType("CalamityMod.World.CalamityWorld")?.GetField("death");
+                var calamityWorldType = cal.Code.GetType("CalamityMod.World.CalamityWorld");
+                _calamityRevengeField = calamityWorldType?.GetField("revenge", BindingFlags.Static | BindingFlags.Public);
             }
-            
+
             _initialized = true;
         }
     }

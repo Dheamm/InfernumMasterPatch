@@ -14,6 +14,8 @@ namespace InfernumMasterPatch
 {
     public class MasterPatchDifficulty : DifficultyMode
     {
+        private bool _isActive;
+
         public override Asset<Texture2D> Texture => ModContent.Request<Texture2D>("InfernumMasterPatch/Assets/Textures/IconUI");
         public override Asset<Texture2D> TextureDisabled => ModContent.Request<Texture2D>("InfernumMasterPatch/Assets/Textures/IconUI_Off");
         public override Asset<Texture2D> OutlineTexture => ModContent.Request<Texture2D>("InfernumMasterPatch/Assets/Textures/IconUI_Outline");
@@ -22,7 +24,7 @@ namespace InfernumMasterPatch
 
         public override float DifficultyScale => 1.0f;
         public override int BackBoneGameModeID => GameModeID.Master;
-        public override Color ChatTextColor => Color.DarkRed; 
+        public override Color ChatTextColor => Color.DarkRed;
 
         public override LocalizedText Name => Language.GetText("Mods.InfernumMasterPatch.DifficultyUI.Name");
         public override LocalizedText ShortDescription => Language.GetText("Mods.InfernumMasterPatch.DifficultyUI.Desc");
@@ -32,21 +34,69 @@ namespace InfernumMasterPatch
 
         public override bool Enabled
         {
-            get => CompatibilitySystem.IsActive;
+            get => _isActive;
             set
             {
-                if (value != CompatibilitySystem.IsActive)
-                    CompatibilitySystem.TogglePatch(value);
+                if (value == _isActive)
+                    return;
+
+                _isActive = value;
+                CompatibilitySystem.IsPatchActive = value;
+
+                if (value)
+                {
+                    CompatibilitySystem.Announce("Mods.InfernumMasterPatch.Messages.Enabled");
+
+                    if (!Main.GameModeInfo.IsJourneyMode)
+                        Main.GameMode = GameModeID.Master;
+                    else
+                        DifficultyModeSystem.AlignJourneyDifficultySlider();
+
+                    CompatibilitySystem.SetRevengeActive(true);
+                    CompatibilitySystem.SetInfernumActive(true);
+                }
+                else
+                {
+                    CompatibilitySystem.Announce("Mods.InfernumMasterPatch.Messages.Disabled");
+                }
             }
+        }
+
+        public override bool RequiresDifficulty(DifficultyMode mode)
+        {
+            if (mode is DeathDifficulty || mode is MasterDifficulty || mode is RevengeanceDifficulty)
+                return true;
+
+            if (Main.getGoodWorld)
+            {
+                if (mode is LegendaryDifficulty || mode is MaliceDifficulty)
+                    return true;
+            }
+
+            if (ModLoader.TryGetMod("InfernumMode", out _))
+            {
+                if (mode.GetType().Name.Contains("Infernum") && !mode.GetType().Name.Contains("Master"))
+                    return true;
+            }
+
+            return false;
         }
 
         public override bool IsBasedOn(DifficultyMode mode)
         {
-            if (mode is DeathDifficulty || mode is MasterDifficulty) return true;
-            
+            if (mode is DeathDifficulty || mode is MasterDifficulty || mode is RevengeanceDifficulty)
+                return true;
+
             if (Main.getGoodWorld)
             {
-                if (mode is LegendaryDifficulty || mode is MaliceDifficulty) return true;
+                if (mode is LegendaryDifficulty || mode is MaliceDifficulty)
+                    return true;
+            }
+
+            if (ModLoader.TryGetMod("InfernumMode", out _))
+            {
+                if (mode.GetType().Name.Contains("Infernum") && !mode.GetType().Name.Contains("Master"))
+                    return true;
             }
 
             return base.IsBasedOn(mode);
@@ -61,14 +111,16 @@ namespace InfernumMasterPatch
             {
                 DifficultyMode diff = difficultyArray[i];
 
-                if (diff is DeathDifficulty || diff is MasterDifficulty)
+                if (diff is DeathDifficulty || diff is MasterDifficulty || diff is RevengeanceDifficulty)
                     list.Add(i);
-                
+
                 if (Main.getGoodWorld && (diff is LegendaryDifficulty || diff is MaliceDifficulty))
                     list.Add(i);
             }
 
-            if (list.Count <= 0) list.Add(0);
+            if (list.Count <= 0)
+                list.Add(0);
+
             return list.ToArray();
         }
     }

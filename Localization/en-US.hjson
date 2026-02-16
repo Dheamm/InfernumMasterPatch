@@ -1,8 +1,8 @@
 Mods: {
     InfernumMasterPatch: {
         DifficultyUI: {
-            Name: "Infernum Master"
-            Desc: "The ultimate challenge.\n[c/FF0000:Master Mode + Death Mode + Infernum Mode]"
+            Name: "Infernum Master Patch"
+            Desc: "[c/FF0000:The ultimate challenge]"
             Expanded: "[c/FF0000:Note: This combination is not officially balanced by the Infernum team and does not change the stats of bosses altered by the mod (unless own scaling allows it).]"
         }
         Messages: {
