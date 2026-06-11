@@ -1,0 +1,14 @@
+Mods: {
+	InfernumMasterPatch: {
+		DifficultyUI: {
+			Name: Infernum Master Patch
+			Desc: "[c/FF0000:终极挑战]"
+			Expanded: "[c/FF0000:注意：此组合并未经过Infernum团队的官方平衡，]\n[c/FF0000:也不会改变被该模组修改的Boss的属性]\n[c/FF0000:（除非其自身的缩放机制允许）。]"
+		}
+
+		Messages: {
+			Enabled: "[c/32CD32:Infernum Master Patch：已启用]"
+			Disabled: "[c/CD5C5C:Infernum Master Patch：已禁用]"
+		}
+	}
+}

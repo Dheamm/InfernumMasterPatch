@@ -3,7 +3,7 @@ Mods: {
 		DifficultyUI: {
 			Name: Infernum Master Patch
 			Desc: "[c/FF0000:The ultimate challenge]"
-			Expanded: "[c/FF0000:Note: This combination is not officially balanced by the Infernum team and does not change the stats of bosses altered by the mod (unless own scaling allows it).]"
+			Expanded: "[c/FF0000:Note: This combination is not officially]\n[c/FF0000:balanced by the Infernum team and does not]\n[c/FF0000:change the stats of bosses altered by the mod]\n[c/FF0000:(unless own scaling allows it).]"
 		}
 
 		Messages: {

@@ -1,0 +1,14 @@
+Mods: {
+	InfernumMasterPatch: {
+		DifficultyUI: {
+			Name: Infernum Master Patch
+			Desc: "[c/FF0000:Ostateczne wyzwanie]"
+			Expanded: "[c/FF0000:Uwaga: Ta kombinacja nie jest oficjalnie]\n[c/FF0000:zbalansowana przez zespół Infernum i nie zmienia]\n[c/FF0000:statystyk bossów zmodyfikowanych przez moda]\n[c/FF0000:(chyba że pozwala na to własne skalowanie).]"
+		}
+
+		Messages: {
+			Enabled: "[c/32CD32:Infernum Master Patch: WŁĄCZONY]"
+			Disabled: "[c/CD5C5C:Infernum Master Patch: WYŁĄCZONY]"
+		}
+	}
+}

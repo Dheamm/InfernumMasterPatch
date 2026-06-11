@@ -1,0 +1,14 @@
+Mods: {
+	InfernumMasterPatch: {
+		DifficultyUI: {
+			Name: Infernum Master Patch
+			Desc: "[c/FF0000:El desafío definitivo]"
+			Expanded: "[c/FF0000:Nota: Esta combinación no está oficialmente]\n[c/FF0000:balanceada por el equipo de Infernum y no]\n[c/FF0000:cambia las estadísticas de los jefes alterados]\n[c/FF0000:por el mod (salvo que su escalado lo permita).]"
+		}
+
+		Messages: {
+			Enabled: "[c/32CD32:Infernum Master Patch: ACTIVADO]"
+			Disabled: "[c/CD5C5C:Infernum Master Patch: DESACTIVADO]"
+		}
+	}
+}

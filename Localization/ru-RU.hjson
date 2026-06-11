@@ -1,0 +1,14 @@
+Mods: {
+	InfernumMasterPatch: {
+		DifficultyUI: {
+			Name: Infernum Master Patch
+			Desc: "[c/FF0000:Высший вызов]"
+			Expanded: "[c/FF0000:Примечание: данная комбинация официально]\n[c/FF0000:не сбалансирована командой Infernum и не]\n[c/FF0000:изменяет характеристики боссов, изменённых модом]\n[c/FF0000:(если только собственное масштабирование это не допускает).]"
+		}
+
+		Messages: {
+			Enabled: "[c/32CD32:Infernum Master Patch: ВКЛЮЧЁН]"
+			Disabled: "[c/CD5C5C:Infernum Master Patch: ОТКЛЮЧЁН]"
+		}
+	}
+}

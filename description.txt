@@ -6,8 +6,8 @@ How to use:
 Just as standard Infernum follows the hierarchy of Expert + Revengeance + Infernum, this patch establishes a new progression: Master + Death + Infernum (which automatically scales to Legendary + Malice + Infernum on FTW seeds).
 
 1. Enter your world.
-2. Open the **Calamity Difficulty UI**.
-3. Click the **"Infernum Master Patch"** icon located after the maximum difficulty.
+2. Open the Calamity Difficulty UI.
+3. Click the "Infernum Master Patch" icon located after the maximum difficulty.
 4. Have fun.
 
 Disclaimer:

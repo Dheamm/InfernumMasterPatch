@@ -1,0 +1,14 @@
+Mods: {
+	InfernumMasterPatch: {
+		DifficultyUI: {
+			Name: Infernum Master Patch
+			Desc: "[c/FF0000:La sfida definitiva]"
+			Expanded: "[c/FF0000:Nota: Questa combinazione non è ufficialmente]\n[c/FF0000:bilanciata dal team di Infernum e non modifica]\n[c/FF0000:le statistiche dei boss alterati dalla mod]\n[c/FF0000:(a meno che il proprio ridimensionamento non lo consenta).]"
+		}
+
+		Messages: {
+			Enabled: "[c/32CD32:Infernum Master Patch: ATTIVATO]"
+			Disabled: "[c/CD5C5C:Infernum Master Patch: DISATTIVATO]"
+		}
+	}
+}
