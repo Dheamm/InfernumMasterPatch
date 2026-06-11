@@ -1,13 +1,14 @@
 Mods: {
-    InfernumMasterPatch: {
-        DifficultyUI: {
-            Name: "Infernum Master Patch"
-            Desc: "[c/FF0000:The ultimate challenge]"
-            Expanded: "[c/FF0000:Note: This combination is not officially balanced by the Infernum team and does not change the stats of bosses altered by the mod (unless own scaling allows it).]"
-        }
-        Messages: {
-            Enabled: "[c/32CD32:Infernum Master Patch: ENABLED]"
-            Disabled: "[c/CD5C5C:Infernum Master Patch: DISABLED]"
-        }
-    }
+	InfernumMasterPatch: {
+		DifficultyUI: {
+			Name: Infernum Master Patch
+			Desc: "[c/FF0000:The ultimate challenge]"
+			Expanded: "[c/FF0000:Note: This combination is not officially balanced by the Infernum team and does not change the stats of bosses altered by the mod (unless own scaling allows it).]"
+		}
+
+		Messages: {
+			Enabled: "[c/32CD32:Infernum Master Patch: ENABLED]"
+			Disabled: "[c/CD5C5C:Infernum Master Patch: DISABLED]"
+		}
+	}
 }

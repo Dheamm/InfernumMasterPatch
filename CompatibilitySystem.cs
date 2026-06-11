@@ -1,20 +1,22 @@
+using System;
 using System.Reflection;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Chat;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
-using Microsoft.Xna.Framework;
 
 namespace InfernumMasterPatch
 {
     public class CompatibilitySystem : ModSystem
     {
         private static PropertyInfo _infernumDisableModes;
-        private static FieldInfo _infernumActiveField;
+        private static PropertyInfo _infernumModeEnabledProp;
         private static FieldInfo _calamityRevengeField;
         private static MethodInfo _sendPacketMethod;
-        private static System.Type _infernumActivityPacketType;
+        private static Type _infernumActivityPacketType;
+
         private static bool _initialized;
         private static bool _patchActive;
 
@@ -28,11 +30,18 @@ namespace InfernumMasterPatch
         {
             _initialized = false;
             _patchActive = false;
+            Initialize();
         }
 
-        public override void OnModLoad()
+        public override void Unload()
         {
-            Initialize();
+            _infernumDisableModes = null;
+            _infernumModeEnabledProp = null;
+            _calamityRevengeField = null;
+            _sendPacketMethod = null;
+            _infernumActivityPacketType = null;
+            _initialized = false;
+            _patchActive = false;
         }
 
         public override void PreUpdateWorld()
@@ -43,62 +52,79 @@ namespace InfernumMasterPatch
                 return;
             }
 
-            if (!_initialized)
-                Initialize();
+            if (_patchActive)
+                ForceDisableDifficultyModesOff();
+        }
 
-            if (_patchActive && _infernumDisableModes != null)
+        public static void ForceDisableDifficultyModesOff()
+        {
+            try
             {
-                _infernumDisableModes.SetValue(null, false);
+                _infernumDisableModes?.SetValue(null, false);
+            }
+            catch (Exception ex)
+            {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    $"[InfernumMasterPatch] ForceDisableDifficultyModesOff failed: {ex.Message}");
+            }
+        }
+
+        public static void EnsureInfernumActive()
+        {
+            try
+            {
+                if (_infernumModeEnabledProp == null)
+                    return;
+
+                bool currentlyActive = (bool)_infernumModeEnabledProp.GetValue(null);
+                if (!currentlyActive)
+                {
+                    ModContent.GetInstance<InfernumMasterPatch>().Logger.Info(
+                        "[InfernumMasterPatch] Infernum was turned off after PreUpdateWorld — restoring.");
+                    _infernumModeEnabledProp.SetValue(null, true);
+                    SendInfernumSyncPacket();
+                }
+            }
+            catch (Exception ex)
+            {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    $"[InfernumMasterPatch] EnsureInfernumActive failed: {ex.Message}");
             }
         }
 
         public static bool IsInfernumActive()
         {
-            if (!_initialized || _infernumActiveField == null)
+            if (!_initialized || _infernumModeEnabledProp == null)
                 return false;
 
             try
             {
-                return (bool)_infernumActiveField.GetValue(null);
+                return (bool)_infernumModeEnabledProp.GetValue(null);
             }
-            catch
+            catch (Exception ex)
             {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    $"[InfernumMasterPatch] IsInfernumActive failed: {ex.Message}");
                 return false;
             }
         }
 
         public static void SetInfernumActive(bool active)
         {
-            if (!_initialized || _infernumActiveField == null)
+            if (!_initialized || _infernumModeEnabledProp == null)
                 return;
 
             try
             {
-                _infernumActiveField.SetValue(null, active);
-                
+                _infernumModeEnabledProp.SetValue(null, active);
+
                 if (active)
                     SendInfernumSyncPacket();
             }
-            catch
+            catch (Exception ex)
             {
-            }
-        }
-
-        private static void SendInfernumSyncPacket()
-        {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-                return;
-
-            try
-            {
-                if (_sendPacketMethod != null && _infernumActivityPacketType != null)
-                {
-                    var genericMethod = _sendPacketMethod.MakeGenericMethod(_infernumActivityPacketType);
-                    genericMethod.Invoke(null, new object[] { null, -1, -1 });
-                }
-            }
-            catch
-            {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    $"[InfernumMasterPatch] SetInfernumActive({active}) failed: {ex.Message}");
             }
         }
 
@@ -111,8 +137,10 @@ namespace InfernumMasterPatch
             {
                 _calamityRevengeField.SetValue(null, active);
             }
-            catch
+            catch (Exception ex)
             {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    $"[InfernumMasterPatch] SetRevengeActive({active}) failed: {ex.Message}");
             }
         }
 
@@ -130,6 +158,31 @@ namespace InfernumMasterPatch
                 Main.NewText(text, color);
         }
 
+        private static void SendInfernumSyncPacket()
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            try
+            {
+                if (_sendPacketMethod == null || _infernumActivityPacketType == null)
+                    return;
+
+                var genericMethod = _sendPacketMethod.MakeGenericMethod(_infernumActivityPacketType);
+                var parameters = genericMethod.GetParameters();
+                var args = new object[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++)
+                    args[i] = parameters[i].ParameterType == typeof(int) ? (object)-1 : null;
+
+                genericMethod.Invoke(null, args);
+            }
+            catch (Exception ex)
+            {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    $"[InfernumMasterPatch] SendInfernumSyncPacket failed: {ex.Message}");
+            }
+        }
+
         private static void Initialize()
         {
             if (_initialized)
@@ -137,16 +190,25 @@ namespace InfernumMasterPatch
 
             if (ModLoader.TryGetMod("InfernumMode", out Mod inf))
             {
-                _infernumDisableModes = inf.Code.GetType("InfernumMode.Core.GlobalInstances.Systems.DifficultyManagementSystem")?.GetProperty("DisableDifficultyModes");
-                _infernumActiveField = inf.Code.GetType("InfernumMode.Core.GlobalInstances.Systems.WorldSaveSystem")?.GetField("infernumModeEnabled", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-                
+                var diffSystemType = inf.Code.GetType(
+                    "InfernumMode.Core.GlobalInstances.Systems.DifficultyManagementSystem");
+                _infernumDisableModes = diffSystemType?.GetProperty(
+                    "DisableDifficultyModes",
+                    BindingFlags.Static | BindingFlags.Public);
+
+                var worldSaveType = inf.Code.GetType(
+                    "InfernumMode.Core.GlobalInstances.Systems.WorldSaveSystem");
+                _infernumModeEnabledProp = worldSaveType?.GetProperty(
+                    "InfernumModeEnabled",
+                    BindingFlags.Static | BindingFlags.Public);
+
                 var packetManagerType = inf.Code.GetType("InfernumMode.Core.Netcode.PacketManager");
-                _infernumActivityPacketType = inf.Code.GetType("InfernumMode.Core.Netcode.Packets.InfernumModeActivityPacket");
-                
+                _infernumActivityPacketType = inf.Code.GetType(
+                    "InfernumMode.Core.Netcode.Packets.InfernumModeActivityPacket");
+
                 if (packetManagerType != null)
                 {
-                    var methods = packetManagerType.GetMethods(BindingFlags.Static | BindingFlags.Public);
-                    foreach (var method in methods)
+                    foreach (var method in packetManagerType.GetMethods(BindingFlags.Static | BindingFlags.Public))
                     {
                         if (method.Name == "SendPacket" && method.IsGenericMethod)
                         {
@@ -155,12 +217,34 @@ namespace InfernumMasterPatch
                         }
                     }
                 }
+
+                if (_infernumDisableModes == null)
+                    ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                        "[InfernumMasterPatch] Could not cache DisableDifficultyModes.");
+                if (_infernumModeEnabledProp == null)
+                    ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                        "[InfernumMasterPatch] Could not cache InfernumModeEnabled.");
+            }
+            else
+            {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    "[InfernumMasterPatch] InfernumMode not found during Initialize.");
             }
 
             if (ModLoader.TryGetMod("CalamityMod", out Mod cal))
             {
                 var calamityWorldType = cal.Code.GetType("CalamityMod.World.CalamityWorld");
-                _calamityRevengeField = calamityWorldType?.GetField("revenge", BindingFlags.Static | BindingFlags.Public);
+                _calamityRevengeField = calamityWorldType?.GetField(
+                    "revenge", BindingFlags.Static | BindingFlags.Public);
+
+                if (_calamityRevengeField == null)
+                    ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                        "[InfernumMasterPatch] Could not cache CalamityWorld.revenge.");
+            }
+            else
+            {
+                ModContent.GetInstance<InfernumMasterPatch>().Logger.Warn(
+                    "[InfernumMasterPatch] CalamityMod not found during Initialize.");
             }
 
             _initialized = true;
